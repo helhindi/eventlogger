@@ -31,28 +31,19 @@ Assuming you've installed `aws-cli` (as shown above); init, authenticate and set
   aws-cli init
 ```
 
-Create a GCS bucket for TF state and initialise it:
+Create an S3 bucket for TF state and initialise it:
 ```
-  gsutil mb -l [REGION] gs://[BUCKET_NAME]
-  terraform init -backend-config=bucket=[BUCKET_NAME] -backend-config=project=[GOOGLE_PROJECT]
+  s3 mb -l [REGION] s3://[BUCKET_NAME]
+  terraform init -backend-config=bucket=[BUCKET_NAME]
 ```
 
-#### Initialise Terraform GCP vars:
+#### Initialise Terraform vars:
 ```
-  export TF_VAR_project="$(gcloud config list --format 'value(core.project)')"
-  export TF_VAR_region="europe-west2"
+  export TF_VAR_region="eu-west-2"
 ```
 **Note:** Verify the vars by running:
 ```
-  echo TF_VAR_region=$TF_VAR_region&&echo TF_VAR_project=$TF_VAR_project
-```
-
-Also, enter your `gcp_project_id` and `gcp_location` in the `/terraform.tfvars` file.
-
-Now specify an administrative account `user=admin` and set a random password:
-```
-  export TF_VAR_user="admin"
-  export TF_VAR_password="m8XBWryuWEJ238ew"
+  echo TF_VAR_region=$TF_VAR_region
 ```
 
 ## Initialise and create:
@@ -64,17 +55,23 @@ Once happy with the above plan output; apply using:
 ```
   terraform apply
 ```
-Once the infrastructure is deployed; authenticate and connect to your cluster via `kubectl` and deploy your code using:
+Once the infrastructure is deployed; authenticate and connect, deploy :
 ```
   skaffold run (or 'skaffold dev' if you want to see code changes deployed immediately)
 ```
 
 ## Testing:
-Now to test the `flask` web service; run:
+Now submit an event to the api:
 ```
-  curl localhost:8080/test
+curl -X POST -H "x-api-key: api-key-value" \
+  -H "Content-Type: application/json" \
+  -d '{"deviceId":"0000"}' \
+  https://eventlogger.elhindi.org/event
 ```
-To test the `postgres` db; run:
+To list all events:
 ```
-  curl localhost:8080/test_db
+curl -X GET \
+  -H "x-api-key: api-key-value" \
+  -H "Content-Type: application/json" \
+  https://eventlogger.elhindi.org/events
 ```
